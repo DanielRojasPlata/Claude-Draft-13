@@ -1,0 +1,42 @@
+{
+  "name": "guionista",
+  "version": "1.0.0",
+  "description": "Editor de guiones profesional con formato de industria automático",
+  "main": "main.js",
+  "author": "Guionista",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "app.guionista.editor",
+    "productName": "Guionista",
+    "artifactName": "Guionista-Portable.exe",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "ai-preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Guionista-Portable.exe"
+    },
+    "asar": true
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0"
+  }
+}

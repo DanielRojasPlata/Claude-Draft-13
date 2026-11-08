@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guionista</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="toolbar" id="toolbar">
+    <div class="brand"><span class="logo" data-icon="logo"></span><span class="brand-name">Guionista</span></div>
+    <div class="tb-group">
+      <label class="sr" for="elementSelect">Elemento</label>
+      <select id="elementSelect" class="select" title="Elemento (Ctrl+1…9)"></select>
+      <button class="btn icon" id="btnBold" title="Negrita (Ctrl+B)" data-icon="bold"></button>
+      <button class="btn icon" id="btnItalic" title="Cursiva (Ctrl+I)" data-icon="italic"></button>
+      <button class="btn icon" id="btnUnderline" title="Subrayado (Ctrl+U)" data-icon="underline"></button>
+    </div>
+    <div class="tb-group">
+      <label class="sr" for="formatSelect">Formato</label>
+      <select id="formatSelect" class="select" title="Formato de guion"></select>
+      <button class="btn icon" id="btnEditFormat" title="Editar formato…" data-icon="sliders"></button>
+    </div>
+    <div class="tb-group seg" role="group" aria-label="Vista">
+      <button class="btn seg-btn active" id="btnViewScript" title="Guion (Ctrl+Alt+1)">Guion</button>
+      <button class="btn seg-btn" id="btnViewCards" title="Fichas (Ctrl+Alt+2)">Fichas</button>
+    </div>
+    <div class="meter" id="meter" title="Tiempo estimado en pantalla">
+      <span class="meter-ico" data-icon="clock"></span>
+      <div class="meter-body"><div class="meter-top"><b id="meterTime">0:00</b><span id="meterTarget">/ 90 min</span></div><div class="meter-bar"><i id="meterFill"></i></div></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tb-group">
+      <button class="btn icon" id="btnZoomOut" title="Alejar (Ctrl+-)" data-icon="minus"></button>
+      <span id="zoomLabel" class="zoom">100%</span>
+      <button class="btn icon" id="btnZoomIn" title="Acercar (Ctrl+=)" data-icon="plus"></button>
+      <button class="btn icon" id="btnFocus" title="Modo foco (Ctrl+Shift+F)" data-icon="focus"></button>
+      <button class="btn icon" id="btnTheme" title="Tema claro/oscuro (Ctrl+Shift+L)" data-icon="moon"></button>
+      <button class="btn primary" id="btnAI" title="Asistente IA flotante (Ctrl+Shift+A)"><span data-icon="spark"></span>Asistente IA</button>
+    </div>
+  </header>
+  <div class="body" id="body">
+    <aside class="sidebar" id="sidebar" aria-label="Navegador">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="scenes" role="tab">Escenas</button>
+        <button class="tab" data-tab="characters" role="tab">Personajes</button>
+        <button class="tab" data-tab="notes" role="tab">Notas</button>
+      </div>
+      <input id="sideFilter" class="input" type="search" placeholder="Filtrar…" aria-label="Filtrar">
+      <div id="sideList" class="side-list" role="list"></div>
+    </aside>
+    <main class="main">
+      <div class="findbar" id="findbar" hidden>
+        <input id="findInput" class="input" type="text" placeholder="Buscar" aria-label="Buscar">
+        <input id="replaceInput" class="input" type="text" placeholder="Reemplazar con" aria-label="Reemplazar con">
+        <label class="chk"><input type="checkbox" id="findCase"> Aa</label>
+        <label class="chk"><input type="checkbox" id="findWord"> Palabra</label>
+        <span id="findCount" class="muted">0/0</span>
+        <button class="btn" id="findPrev" title="Anterior (Shift+F3)">↑</button>
+        <button class="btn" id="findNext" title="Siguiente (F3)">↓</button>
+        <button class="btn" id="replaceOne">Reemplazar</button>
+        <button class="btn" id="replaceAll">Todo</button>
+        <button class="btn icon" id="findClose" title="Cerrar (Esc)" data-icon="x"></button>
+      </div>
+      <div class="scroller" id="scroller">
+        <div class="paper" id="paper"><div id="script"></div></div>
+      </div>
+      <div class="cards-view" id="cardsView" hidden></div>
+    </main>
+  </div>
+  <footer class="statusbar" id="statusbar">
+    <span id="stElement">Escena</span>
+    <span class="dot">•</span><span id="stPage">Página 1 de 1</span>
+    <span class="dot">•</span><span id="stWords">0 palabras</span>
+    <span class="dot">•</span><span id="stScenes">0 escenas</span>
+    <span class="spacer"></span>
+    <span id="stTime" title="Tiempo estimado">Duración 0:00</span>
+    <span class="dot">•</span><span id="stFormat">Largometraje</span>
+    <span class="dot">•</span><span id="stSave" class="save-state">Guardado</span>
+  </footer>
+</div>
+<div id="modalRoot"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="js/model.js"></script>
+<script src="js/lang.js"></script>
+<script src="js/formats.js"></script>
+<script src="js/timing.js"></script>
+<script src="js/fountain.js"></script>
+<script src="js/paginate.js"></script>
+<script src="js/autocomplete.js"></script>
+<script src="js/export.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

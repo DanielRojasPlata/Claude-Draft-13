@@ -1,0 +1,26 @@
+const { app, BrowserWindow, Menu } = require('electron');
+require('../main.js');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const find = (items, label) => { for (const it of items) { if (it.label === label) return it; if (it.submenu) { const r = find(it.submenu.items, label); if (r) return r; } } return null; };
+app.whenReady().then(async () => {
+  await sleep(1500);
+  const out = [];
+  const item = find(Menu.getApplicationMenu().items, 'Asistente IA flotante');
+  out.push((item ? 'PASS' : 'FAIL') + ' menú Asistente IA existe, atajo ' + (item && item.accelerator));
+  item.click(); await sleep(2500);
+  const wins = BrowserWindow.getAllWindows();
+  out.push((wins.length === 2 ? 'PASS' : 'FAIL') + ' ventana flotante creada: ' + wins.length);
+  const ai = wins.find((w) => w.getTitle().includes('Asistente') || w.webContents.getURL().includes('ai.html'));
+  out.push((ai && ai.isAlwaysOnTop() ? 'PASS' : 'FAIL') + ' siempre visible');
+  const btns = await ai.webContents.executeJavaScript("Array.from(document.querySelectorAll('#prov button')).map(b=>b.textContent+(b.classList.contains('on')?'*':'')).join(',')");
+  out.push('INFO proveedores: ' + btns);
+  await ai.webContents.executeJavaScript("document.querySelector('[data-p=gemini]').click()"); await sleep(1200);
+  const btns2 = await ai.webContents.executeJavaScript("Array.from(document.querySelectorAll('#prov button')).map(b=>b.textContent+(b.classList.contains('on')?'*':'')).join(',')");
+  out.push((/Gemini\*/.test(btns2) ? 'PASS' : 'FAIL') + ' cambio de proveedor: ' + btns2);
+  const kids = ai.contentView.children.length;
+  out.push((kids >= 2 ? 'PASS' : 'FAIL') + ' vistas web adjuntas: ' + kids);
+  const r = await ai.webContents.executeJavaScript("window.ai.send({template:'feedback',scope:'selection'})");
+  out.push((r && r.ok === false ? 'PASS' : 'FAIL') + ' enviar sin selección se rechaza: ' + JSON.stringify(r));
+  console.log(out.join('\n'));
+  app.exit(0);
+});

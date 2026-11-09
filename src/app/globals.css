@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* One theme drives every surface: page, canvas, ribbon, navigator, assistant, dialogs, menus. */
+:root, .theme-day {
+  --canvas: #e9e6e1; --paper: #ffffff; --ink: #111111; --page-edge: rgba(0, 0, 0, .18);
+  --chrome: #14161b; --panel: #f4f2ee; --panel2: #ffffff; --panel-ink: #1b1d22; --muted: #6b6f78; --line: rgba(0, 0, 0, .13); --hover: rgba(0, 0, 0, .06);
+  --faint: rgba(0, 0, 0, .07); color-scheme: light;
+}
+.theme-night {
+  --canvas: #17181c; --paper: #2b2d33; --ink: #ecead3; --page-edge: #5a5e68;
+  --chrome: #0e0f12; --panel: #23252a; --panel2: #2d3036; --panel-ink: #e9e7e1; --muted: #a2a6af; --line: rgba(255, 255, 255, .16); --hover: rgba(255, 255, 255, .09);
+  --faint: rgba(255, 255, 255, .08); color-scheme: dark;
+}
+.theme-midnight {
+  --canvas: #000000; --paper: #0a0a0c; --ink: #f2f0ea; --page-edge: #8a8d98;
+  --chrome: #000000; --panel: #08080a; --panel2: #121215; --panel-ink: #ebe9e3; --muted: #9a9da7; --line: rgba(255, 255, 255, .26); --hover: rgba(255, 255, 255, .11);
+  --faint: rgba(255, 255, 255, .08); color-scheme: dark;
+}
+.sheet { box-shadow: 0 0 0 1px var(--page-edge), 0 10px 30px rgba(0, 0, 0, .28); }
+html, body { height: 100%; }
+body { @apply bg-canvas text-ink antialiased; font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+select option { background: var(--panel2); color: var(--panel-ink); }
+.caret { animation: blink 1.06s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.page-line { position: absolute; white-space: pre; font-family: var(--ff, "Courier Prime", "Courier New", monospace); font-size: var(--fs, 12pt); line-height: var(--lh, 0.1667in); height: var(--lh, 0.1667in); font-variant-ligatures: none; }
+.sheet { position: relative; overflow: hidden; font-family: "Courier Prime", "Courier New", monospace; }
+.watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transform: rotate(-40deg); font: 700 96px/1 "Courier Prime", monospace; text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline: 2px solid #e8b04a; outline-offset: 1px; }
+@media print { body { background: white; } }
+
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.sp-bad { text-decoration: underline wavy #e5484d; text-decoration-thickness: 1.5px; text-underline-offset: 2px; text-decoration-skip-ink: none; }
+.sp-gram { text-decoration: underline wavy #3b82f6; text-decoration-thickness: 1.5px; text-underline-offset: 2px; text-decoration-skip-ink: none; }

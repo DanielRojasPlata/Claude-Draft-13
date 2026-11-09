@@ -1,0 +1,20 @@
+const { app, BrowserWindow } = require("electron");
+const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
+process.env.GUIONISTA_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "gdata-"));
+app.setPath("userData", fs.mkdtempSync(path.join(os.tmpdir(), "gud-")));
+require("../main.js");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+process.on("unhandledRejection", (e) => { console.log("ERR", e); process.exit(1); });
+(async () => {
+  let w; for (let i = 0; i < 300 && !(w = BrowserWindow.getAllWindows().find((x) => x.webContents.getURL().includes("/scripts"))); i++) await sleep(100);
+  const wc = w.webContents; const js = (s) => wc.executeJavaScript(s);
+  const key = async (k, m = []) => { wc.sendInputEvent({ type: "keyDown", keyCode: k, modifiers: m }); wc.sendInputEvent({ type: "keyUp", keyCode: k, modifiers: m }); await sleep(120); };
+  await sleep(500); await js(`document.querySelector('li a').click()`); await sleep(1800);
+  const st = (l) => js(`({header:!!document.querySelector('header'), active: document.activeElement.tagName+':'+(document.activeElement.ariaLabel||''), full: !!document.fullscreenElement})`).then((x) => console.log(l, JSON.stringify(x), "win.fullscreen", w.isFullScreen()));
+  await js(`[...document.querySelectorAll('[role=tab]')].find(e=>e.textContent.trim()==='View').click()`); await sleep(100);
+  await js(`[...document.querySelectorAll('[role=tabpanel] button')].find(e=>e.textContent.trim()==='Immersive').click()`); await sleep(700);
+  await st("after immersive:");
+  await key("Escape"); await st("after Escape:");
+  await key("F11"); await st("after F11:");
+  process.exit(0);
+})();

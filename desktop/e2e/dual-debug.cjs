@@ -1,0 +1,23 @@
+const { app, BrowserWindow, dialog } = require("electron");
+const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
+process.env.GUIONISTA_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "gdata-"));
+app.setPath("userData", fs.mkdtempSync(path.join(os.tmpdir(), "gud-")));
+require("../main.js");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+(async () => {
+  let w; for (let i = 0; i < 300 && !(w = BrowserWindow.getAllWindows().find((x) => x.webContents.getURL().includes("/scripts"))); i++) await sleep(100);
+  const wc = w.webContents; const js = (s) => wc.executeJavaScript(s);
+  await sleep(500); await js(`document.querySelector('li a').click()`); await sleep(1800);
+  process.on('unhandledRejection', (e) => { console.log('ERR', e); process.exit(1); });
+  await js(`(()=>{const e=[...document.querySelectorAll('[data-page="0"] .page-line')].find(e=>e.textContent==='IRIS'); e.scrollIntoView({block:'center'}); const b=e.getBoundingClientRect(); window.__x=[b.left+4,b.top+6]})()`);
+  const [cx, cy] = await js(`window.__x`);
+  wc.sendInputEvent({ type: "mouseDown", x: Math.round(cx), y: Math.round(cy), button: "left", clickCount: 1 }); wc.sendInputEvent({ type: "mouseUp", x: Math.round(cx), y: Math.round(cy), button: "left", clickCount: 1 }); await sleep(150);
+  console.log("at point:", await js(`(()=>{const e=document.elementFromPoint(${cx},${cy}); return e.className+" | "+e.textContent.slice(0,20)+" | win "+innerWidth+"x"+innerHeight+" scrollY "+document.querySelector("main").scrollTop})()`));
+  console.log("footer before:", await js(`document.querySelector('footer').innerText.slice(0,80)`));
+  await js(`[...document.querySelectorAll('[role=tab]')].find(e=>e.textContent.trim()==='Home').click()`); await sleep(100);
+  console.log("clicked:", await js(`(()=>{const b=[...document.querySelectorAll('[role=tabpanel] button')].find(e=>e.textContent.trim()==='Dual Dialogue'); b.click(); return !!b})()`)); await sleep(500);
+  console.log("footer after:", await js(`document.querySelector('footer').innerText.slice(0,80)`));
+  console.log(JSON.stringify(await js(`[...document.querySelectorAll('[data-page="0"] .page-line')].filter(e=>e.dataset.row).slice(8,24).map(e=>[e.dataset.row,e.style.left,e.textContent.slice(0,22)])`)));
+  await wc.capturePage().then((i) => fs.writeFileSync("/tmp/shot/dual.png", i.toPNG()));
+  process.exit(0);
+})();

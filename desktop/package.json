@@ -1,0 +1,55 @@
+{
+  "name": "guionista-desktop",
+  "version": "2.6.0",
+  "description": "Guionista \u2014 screenplay editor",
+  "author": "Guionista",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "prepare-app": "node prepare.mjs",
+    "start": "electron .",
+    "dist:win": "node build-win.mjs",
+    "dist:linux": "node prepare.mjs && electron-builder --linux dir --x64",
+    "e2e": "xvfb-run -a electron --no-sandbox e2e/harness.cjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0",
+    "pdfjs-dist": "^6.5.438"
+  },
+  "build": {
+    "appId": "app.guionista.desktop",
+    "productName": "Guionista",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Guionista-Portable.exe"
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "category": "Office"
+    },
+    "afterPack": "afterpack.cjs",
+    "electronLanguages": [
+      "en-US"
+    ]
+  },
+  "productName": "Guionista"
+}

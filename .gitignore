@@ -1,3 +1,12 @@
 Draft 13 Portable.exe
 node_modules/
 dist/
+.next
+node_modules
+tsconfig.tsbuildinfo
+.env
+desktop/server
+desktop/node_modules
+desktop/dist
+desktop/GuionistaData
+.data

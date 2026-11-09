@@ -124,7 +124,41 @@ describe("fdx", () => {
     const p = parseFdx(xml);
     expect(p.elements.map((e) => [e.type, elementText(e), e.dual])).toEqual(els.map((e) => [e.type, elementText(e), e.dual]));
     expect(p.elements[1].runs[1]).toEqual({ text: "bold", bold: true, italic: true });
-    expect(p.titlePage.Title).toBe("Pilot"); expect(p.titlePage.Author).toBe("Sam");
+    expect(p.titlePage.Title).toBe("Pilot"); expect(p.titlePage.Author).toBe("SAM");
+  });
+});
+
+describe("fdx from Final Draft", () => {
+  const P = 'Alignment="Left" FirstIndent="0.00" Leading="Regular" LeftIndent="0.00" RightIndent="1.39" SpaceBefore="0" Spacing="1" StartsNewPage="No"';
+  const F = 'AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12"';
+  const xml = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="6">
+  <Content>
+    <Paragraph Type="Scene Heading">
+      <SceneProperties Length="2 1/8" Page="1" Title="">
+        <SceneArcBeats><CharacterArcBeat Name="X"><Paragraph ${P}><Text ${F} Style=""></Text></Paragraph></CharacterArcBeat></SceneArcBeats>
+      </SceneProperties>
+      <ScriptNote Author="" Color="#000000000000" Name="" Type=""><Paragraph ${P}><Text ${F} Style="">note body</Text></Paragraph></ScriptNote>
+      <Text>INT. KITCHEN - DAY</Text>
+    </Paragraph>
+    <Paragraph Type="Action"><Text ${F} Style="Bold">He </Text><Text ${F} Style="">waits &amp; sighs.</Text></Paragraph>
+    <Paragraph Type="Scene Heading" Number="2"><SceneProperties Length="1" Page="2" Title="a &gt; b"/><Text Style="AllCaps">ext. street - night</Text></Paragraph>
+    <Paragraph><DualDialogue>
+      <Paragraph Type="Character"><Text>ANA</Text></Paragraph><Paragraph Type="Dialogue"><Text>Hi</Text></Paragraph>
+      <Paragraph Type="Character"><Text>BEN</Text></Paragraph><Paragraph Type="Dialogue"><Text>Yo</Text></Paragraph>
+    </DualDialogue></Paragraph>
+    <Paragraph Type="Scene Heading"><Text>INT. ROOM - NIGHT</Text></Paragraph>
+  </Content>
+  <TitlePage><Content><Paragraph Alignment="Center"><Text Style="Bold">MY FILM</Text></Paragraph><Paragraph Alignment="Center"><Text>Written by</Text></Paragraph><Paragraph Alignment="Center"><Text>Sam</Text></Paragraph></Content></TitlePage>
+</FinalDraft>`;
+  it("keeps every scene heading even with nested SceneProperties / ScriptNote paragraphs", () => {
+    const p = parseFdx(xml);
+    expect(p.elements.map((e) => [e.type, elementText(e), e.dual])).toEqual([
+      ["Scene Heading", "INT. KITCHEN - DAY", undefined], ["Action", "He waits & sighs.", undefined], ["Scene Heading", "EXT. STREET - NIGHT", undefined],
+      ["Character", "ANA", 1], ["Dialogue", "Hi", 1], ["Character", "BEN", 2], ["Dialogue", "Yo", 2], ["Scene Heading", "INT. ROOM - NIGHT", undefined],
+    ]);
+    expect(p.elements[1].runs[0]).toEqual({ text: "He ", bold: true });
+    expect(p.titlePage).toMatchObject({ Title: "MY FILM", Credit: "Written by", Author: "Sam" });
   });
 });
 

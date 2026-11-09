@@ -144,6 +144,34 @@ describe("paginate", () => {
     expect(all).toContain("MARA (CONT'D)");
     expect(paginate(big(60), new CachedMeasurer()).every((p) => p.rows <= 54)).toBe(true);
   });
+  it("adds (CONT'D) to a speaker who keeps talking in the same scene, not across scenes or other speakers", () => {
+    const els = [el("h1", "Scene Heading", "INT. A - DAY"), el("c1", "Character", "ANA"), el("d1", "Dialogue", "Hi."), el("a1", "Action", "She waits."),
+      el("c2", "Character", "ANA (V.O.)"), el("d2", "Dialogue", "Still here."), el("c3", "Character", "BEN"), el("d3", "Dialogue", "Yes."),
+      el("c4", "Character", "ANA"), el("d4", "Dialogue", "Ok."), el("h2", "Scene Heading", "INT. B - DAY"), el("c5", "Character", "ANA"), el("d5", "Dialogue", "New scene.")];
+    const lines = paginateElements(els, new CachedMeasurer()).flatMap((p) => p.lines);
+    const sfx = (id: string) => lines.find((l) => l.elementId === id)?.suffix;
+    expect([sfx("c1"), sfx("c2"), sfx("c3"), sfx("c4"), sfx("c5")]).toEqual([undefined, " (CONT'D)", undefined, undefined, undefined]);
+  });
+  it("ends a split dialogue on a complete sentence, with (MORE) aligned to the name and NAME (CONT'D) on the next page", () => {
+    const long = [el("h", "Scene Heading", "INT. ROOM - DAY"), el("a", "Action", "Rain. ".repeat(20)), el("c", "Character", "MARA"), el("d", "Dialogue", "I never said that, not once in my life. ".repeat(160))];
+    const pages = paginateElements(long, new CachedMeasurer());
+    const k = pages.findIndex((p) => p.lines.some((l) => l.text === "(MORE)"));
+    expect(k).toBeGreaterThanOrEqual(0);
+    const pl = pages[k].lines; const more = pl.at(-1)!, last = pl.at(-2)!;
+    expect(more.text).toBe("(MORE)");
+    expect(more.leftIn).toBe(pl.find((l) => l.type === "Character" && l.text !== "(MORE)")!.leftIn);
+    expect(/[.!?]$/.test(last.text.trimEnd())).toBe(true);
+    expect(pages[k + 1].lines[0].text).toBe("MARA (CONT'D)");
+  });
+  it("a dialogue longer than two pages keeps all its text, every page ends on a sentence and fits", () => {
+    const text = "I never said that, not once in my life. Why would I? ".repeat(120).trim();
+    const pages = paginateElements([el("h", "Scene Heading", "INT. ROOM - DAY"), el("c", "Character", "MARA"), el("d", "Dialogue", text)], new CachedMeasurer());
+    expect(pages.length).toBeGreaterThan(3);
+    expect(pages.every((p) => p.rows <= 54 && p.lines.every((l) => l.row < 54))).toBe(true);
+    const body = pages.flatMap((p) => p.lines.filter((l) => l.elementId === "d" && !l.synthetic).map((l) => l.text)).join(" ").replace(/\s+/g, " ").trim();
+    expect(body).toBe(text);
+    for (const p of pages.slice(0, -1)) { const l = p.lines.filter((x) => x.elementId === "d" && !x.synthetic).at(-1)!; expect(/[.!?]$/.test(l.text.trimEnd())).toBe(true); }
+  });
   it("scene headings get two blank lines before them, action one, dialogue none (original spacing)", () => {
     const p = paginateElements([el("a", "Action", "one"), el("h", "Scene Heading", "INT. X - DAY"), el("c", "Character", "ANA"), el("d", "Dialogue", "Hi.")], new CachedMeasurer())[0];
     const row = (id: string) => p.lines.find((l) => l.elementId === id)!.row;

@@ -71,7 +71,7 @@ export function Editor({ scriptId, title, initial, initialMeta, rev: initialRev,
   const zoomAnchor = useRef<{ px: number; py: number; ratio: number } | null>(null);
   const [spellVer, setSpellVer] = useState(0);
   const [ribbonCollapsed, setRibbonCollapsed] = useState(false);
-  const [navOpen, setNavOpen] = useState(true);
+  const [navOpen, setNavOpen] = useState(false);
   const [assistant, setAssistant] = useState(false);
   const [dialog, setDialog] = useState<DialogId>(null);
   const [find, setFind] = useState({ open: false, q: "", r: "", matchCase: false });

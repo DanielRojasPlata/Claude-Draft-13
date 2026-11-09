@@ -21,7 +21,7 @@ SmartType suggests characters, extensions, locations and times of day from the s
 Select text across scenes and pages with the mouse (drag, Shift+click) or the keyboard (Shift+arrows, Ctrl+A); copy, cut, delete, format and replace work on the whole selection.
 
 ### Features
-Scene Navigator (drag or ▲▼ to reorder, live scene numbers) · dual dialogue · title page · header/footer/watermark · (MORE)/(CONT'D) control · revision mode with colours, left-margin asterisks and locked page numbers (12A, 12B) · reports (scene, character, cast, location, script/pages) with CSV export · import `.fountain` / `.txt` / `.fdx` · export Fountain, Final Draft XML and PDF · Day / Night / Midnight modes.
+Scene Navigator (drag or ▲▼ to reorder, live scene numbers) · dual dialogue · title page · header/footer/watermark · (MORE)/(CONT'D) control (automatic `NAME (CONT'D)` when a speaker continues in the same scene) · revision mode with colours, left-margin asterisks and locked page numbers (12A, 12B) · reports (scene, character, cast, location, script/pages) with CSV export · import `.fountain` / `.txt` / `.fdx` · export Fountain, Final Draft XML and PDF · Day / Night / Midnight modes.
 
 ### Writing assistant (top-right "Assistant" button)
 The free web versions of **Claude, ChatGPT and Gemini** open inside the panel (desktop app). There is no API key: sign in on the site once and it remembers you. "Paste into chat" copies the current scene, the selection or the whole script and pastes it into the chat box.

@@ -103,6 +103,7 @@ const PageText = memo(function PageText({ page, elsById, sceneNo, showNumbers, m
                 if (sg.mark) return <span key={q} className={sg.mark === "spelling" ? "sp-bad" : "sp-gram"} style={st}>{t}</span>;
                 return Object.keys(st).length ? <span key={q} style={st}>{t}</span> : t;
               })}
+              {l.suffix ? <span data-auto>{l.suffix}</span> : null}
             </div>
             {el && el.rev && !l.synthetic ? <div className="page-line" aria-hidden style={pos(L, l.row, textLeft(L) - 0.25)}>*</div> : null}
             {showNumbers && num !== undefined ? (
@@ -146,7 +147,7 @@ export function TitleSheet({ meta, print }: { meta: DocMeta; print?: boolean }) 
       <div style={{ position: "absolute", top: `${L.height * 0.32}in`, left: `${textLeft(L)}in`, width: `${w}in`, textAlign: "center", ...block }}>
         {t.Title && <div style={{ textTransform: "uppercase", textDecoration: "underline", fontWeight: 700 }}>{t.Title}</div>}
         {t.Credit && <div style={{ marginTop: "2em" }}>{t.Credit}</div>}
-        {t.Author && <div style={{ marginTop: "1em" }}>{t.Author}</div>}
+        {t.Author && <div style={{ marginTop: "1em", textTransform: "uppercase" }}>{t.Author}</div>}
         {t.Source && <div style={{ marginTop: "2em" }}>{t.Source}</div>}
       </div>
       {t.Contact && <div style={{ position: "absolute", top: `${L.height - L.bottom - 2}in`, left: `${textLeft(L)}in`, width: `${w * 0.55}in`, ...block }}>{t.Contact}</div>}

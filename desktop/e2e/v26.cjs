@@ -32,9 +32,12 @@ const scriptsOnDisk = () => fs.readdirSync(data).filter((f) => f.endsWith(".json
   await js(`document.querySelector('section[aria-labelledby=gallery] li button').click()`); await waitUrl(/\/scripts\//);
   ok("Short Film opens", /\/scripts\//.test(wc.getURL()));
   ok("Short Film target is 30 minutes", /of 30m|of 0:30|30 min|30:00|of 30/.test(await js(`document.querySelector('footer').innerText`)), await js(`document.querySelector('footer').innerText`));
-  // ---- Scenes panel visible by default even in a 1000 px wide window
-  const nav = await js(`(()=>{const a=document.querySelector('aside[aria-label="Scene Navigator"]'); if(!a) return null; const r=a.getBoundingClientRect(); return {w:r.width,h:r.height,x:r.x, innerW: innerWidth}})()`);
-  ok("Scenes panel is open by default at 1000 px", nav && nav.w >= 200 && nav.h > 300 && nav.x === 0, nav);
+  // ---- Scenes panel is closed by default; opens only with the Scenes button
+  const navBox = () => js(`(()=>{const a=document.querySelector('aside[aria-label="Scene Navigator"]'); if(!a) return null; const r=a.getBoundingClientRect(); return {w:r.width,h:r.height,x:r.x}})()`);
+  ok("Scenes panel is closed on a new script", (await navBox()) === null);
+  await js(`[...document.querySelectorAll('button')].find(b=>/Scenes/.test(b.textContent)).click()`); await sleep(300);
+  const nav = await navBox();
+  ok("Scenes button opens the panel at 1000 px", nav && nav.w >= 200 && nav.h > 300 && nav.x === 0, nav);
   const mainBox = await js(`(()=>{const r=document.querySelector('main').getBoundingClientRect(); return {x:r.x,w:r.width}})()`);
   ok("script area sits beside the panel (not under it)", mainBox.x >= nav.w - 1, mainBox);
   // ---- title bold

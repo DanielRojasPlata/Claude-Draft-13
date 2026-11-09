@@ -8,18 +8,33 @@ export interface PLine {
   start?: number; synthetic?: boolean;
   /** horizontal extent of the line in inches, from the page layout */
   leftIn: number; rightIn: number; col?: 1 | 2;
+  /** automatic text drawn after the line but not part of the element: " (CONT'D)" for a speaker who keeps talking in the same scene */
+  suffix?: string;
 }
 export interface Page { number: number; label: string; lines: PLine[]; rows: number }
 export interface PaginateOpts { resume?: { pages: Page[]; dirty: number }; lock?: LockEntry[] | null; mores?: boolean; lang?: Lang; layout?: PageLayout }
-const MORE: Record<Lang, [string, string]> = { en: ["(MORE)", " (CONT'D)"], es: ["(MÁS)", " (CONT.)"] };
-
-
-
-/** Split lines at sentence boundaries when possible (Action blocks). */
-function sentenceSplit(lines: string[], fit: number): number {
-  for (let i = Math.min(fit, lines.length - 1); i >= 1; i--) if (/[.!?…]["')]?$/.test(lines[i - 1].trimEnd())) return i;
-  return Math.min(fit, lines.length - 1);
+/** Screenplay convention, kept in English for every script language: "(MORE)" at the foot of a page and "NAME (CONT'D)" on the next. */
+const MORE_TXT = "(MORE)", CONTD_TXT = " (CONT'D)";
+const baseName = (t: string) => t.toUpperCase().replace(/\s*\(.*$/, "").trim();
+/**
+ * True when this Character cue repeats the previous speaker of the same scene (only action,
+ * parentheticals, dialogue, etc. in between): the page then shows "NAME (CONT'D)" by itself.
+ */
+export function isContd(els: Element[], i: number): boolean {
+  const e = els[i];
+  if (!e || e.type !== "Character" || e.dual) return false;
+  const t = elementText(e);
+  const name = baseName(t);
+  if (!name || /CONT/i.test(t)) return false;
+  for (let j = i - 1; j >= 0; j--) {
+    const q = els[j];
+    if (q.type === "Scene Heading") return false;
+    if (q.type === "Character") return !q.dual && baseName(elementText(q)) === name;
+  }
+  return false;
 }
+
+
 
 export const paginate = (script: Script, m: Measurer): Page[] => paginateElements(script.scenes.flatMap((s) => s.elements), m);
 
@@ -64,7 +79,7 @@ export function paginateElements(els: Element[], m: Measurer, opts: PaginateOpts
   const { resume, lock, mores = true, lang = "en" } = opts;
   const L = opts.layout ?? m.layout; const LPP = linesPerPage(L); const CW = charW(L);
   const blankBefore = (el: Element, prev?: Element) => (prev ? spaceBefore(el.type, L) : 0);
-  const [moreTxt, contTxt] = MORE[lang];
+  const moreTxt = MORE_TXT, contTxt = CONTD_TXT; void lang;
   const lockSet = new Set((lock ?? []).map((l) => l.id));
   let pages: Page[] = [{ number: 1, label: "1", lines: [], rows: 0 }];
   let startAt = 0;
@@ -144,7 +159,13 @@ export function paginateElements(els: Element[], m: Measurer, opts: PaginateOpts
     let need = gap + lines.length;
     const next = els[i + 1];
     if ((el.type === "Scene Heading" || el.type === "Character") && next) need += spaceBefore(next.type, L) + Math.min(2, m.lines(elementText(next), next.type).length);
-    const put = (from: number, to: number) => { for (let j = from; j < to; j++) emit(lines[j], el, starts[j]); };
+    const contd = isContd(els, i);
+    const put = (from: number, to: number) => {
+      for (let j = from; j < to; j++) {
+        emit(lines[j], el, starts[j]);
+        if (contd && j === 0) page.lines[page.lines.length - 1].suffix = CONTD_TXT;
+      }
+    };
     if (used() + need <= LPP) {
       for (let g = 0; g < gap; g++) blank();
       put(0, lines.length);
@@ -152,18 +173,34 @@ export function paginateElements(els: Element[], m: Measurer, opts: PaginateOpts
     }
     if (used() + gap + lines.length <= LPP) { newPage(); put(0, lines.length); continue; }
     if (el.type === "Dialogue" || el.type === "Action") {
-      const room = LPP - used() - gap - (el.type === "Dialogue" && mores ? 1 : 0);
-      if (room >= 2 && lines.length - room >= 1) {
-        const cut = el.type === "Action" ? sentenceSplit(lines, room) : room;
+      const dlg = el.type === "Dialogue" && mores;
+      if (LPP - used() - gap - (dlg ? 1 : 0) >= 2 && lines.length > LPP - used() - gap - (dlg ? 1 : 0)) {
         for (let g = 0; g < gap; g++) blank();
-        put(0, cut);
-        if (el.type === "Dialogue" && mores) emit(moreTxt, { ...el, type: "Character" }, undefined, true);
-        newPage();
-        if (el.type === "Dialogue" && mores) {
-          let c = i - 1; while (c >= 0 && els[c].type !== "Character") c--;
-          if (c >= 0) emit(`${m.lines(elementText(els[c]), "Character")[0].trimEnd().replace(/ \((CONT'D|CONT\.)\)$/, "")}${contTxt}`, els[c], undefined, true);
+        let off = 0;
+        for (;;) {
+          const rel = off ? m.lines(raw.slice(off), el.type) : lines;
+          const st = (off ? lineStarts(caps(el, raw.slice(off)), rel) : starts).map((x) => x + off);
+          const free = LPP - page.rows;
+          if (rel.length <= free) { for (let j = 0; j < rel.length; j++) { emit(rel[j], el, st[j]); if (contd && off === 0 && j === 0) page.lines[page.lines.length - 1].suffix = CONTD_TXT; } break; }
+          const room = free - (dlg ? 1 : 0);
+          // end the page on the last complete sentence that fits (the rest of that line moves to the next page)
+          const seg = raw.slice(off, off + (st[room - 1] - off) + rel[room - 1].length);
+          let p = 0; for (const mm of seg.matchAll(/[.!?…]+["'”’)\]]*(?=\s|$)/g)) p = mm.index! + mm[0].length;
+          let pre = p > 0 ? m.lines(seg.slice(0, p), el.type) : [];
+          let preSt = pre.length ? lineStarts(caps(el, seg.slice(0, p)), pre).map((x) => x + off) : [];
+          let next = off + p;
+          if (pre.length < 2 || next >= raw.length) { pre = rel.slice(0, room); preSt = st.slice(0, room); next = room < rel.length ? st[room] : raw.length; }
+          for (let j = 0; j < pre.length; j++) { emit(pre[j], el, preSt[j]); if (contd && off === 0 && j === 0) page.lines[page.lines.length - 1].suffix = CONTD_TXT; }
+          if (dlg) emit(moreTxt, { ...el, type: "Character" }, undefined, true);
+          newPage();
+          if (dlg) {
+            let c = i - 1; while (c >= 0 && els[c].type !== "Character") c--;
+            if (c >= 0) emit(`${m.lines(elementText(els[c]), "Character")[0].trimEnd().replace(/ \((CONT'D|CONT\.)\)$/, "")}${contTxt}`, els[c], undefined, true);
+          }
+          while (next < raw.length && /\s/.test(raw[next])) next++;
+          off = next;
+          if (off >= raw.length) break;
         }
-        put(cut, lines.length);
         continue;
       }
     }

@@ -22,7 +22,7 @@ export interface DocMeta {
   targetMinutes: number;
   view: ViewMode;
   smartType: SmartTypeConfig;
-  /** script language: drives SmartType lists, (MORE)/(CONT.), and the spelling and grammar checker */
+  /** script language: drives SmartType lists, (MORE)/(CONT'D), and the spelling and grammar checker */
   language: Lang;
   /** page size, margins, font, spacing (Document > Page Layout) */
   layout: PageLayout;

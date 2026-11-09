@@ -57,3 +57,6 @@ Shipped:
 - The Scenes panel is closed on launch, new scripts and opened scripts; only the Scenes button opens it.
 Verified: 66 vitest (new: FDX with nested SceneProperties/ScriptNote, CONT'D rules, sentence-aware split incl. 3+ page dialogue); tsc strict; `pnpm build`; 31 end-to-end checks (e2e/v26.cjs, updated for the closed panel).
 Not verified: real Windows exe; no real Final Draft 13 .fdx file was available, the parser was checked against the structures embedded in its exe.
+
+## Slice 8 — v2.7.1 (saving real-sized scripts)
+Bug: scripts opened from Final Draft stayed on "Offline — retrying" and never saved. Cause: the save request used `fetch(..., { keepalive: true })`; browsers reject keepalive bodies over 64 KiB before sending ("Failed to fetch"), so any script above about 60 KB of JSON looked offline. Fix: keepalive only for small bodies (< 20,000 chars); the window already waits for the save before closing. Reproduced in the real shell with a 106 KB script (desktop/e2e/v27.cjs), then verified fixed; v26.cjs still passes.

@@ -116,9 +116,11 @@ export function Editor({ scriptId, title, initial, initialMeta, rev: initialRev,
     if (snap.cur === lastSaved.current.cur && snap.meta === lastSaved.current.meta) return;
     inflight.current = true; setStatus("saving");
     try {
+      const body = JSON.stringify({ elements: snap.cur.elements, cursor: { id: snap.cur.cursor.id, offset: snap.cur.cursor.offset }, meta: snap.meta, rev: rev.current });
+      // `keepalive` requests are capped at 64 KiB (bytes, not characters) by the browser: a longer body is rejected before it is sent ("Failed to fetch"),
+      // which made every real-sized script look offline. Big scripts use a normal request (the window waits for the save before closing).
       const r = await fetch(`/api/scripts/${scriptId}`, {
-        method: "PUT", headers: { "content-type": "application/json" }, keepalive: true,
-        body: JSON.stringify({ elements: snap.cur.elements, cursor: { id: snap.cur.cursor.id, offset: snap.cur.cursor.offset }, meta: snap.meta, rev: rev.current }),
+        method: "PUT", headers: { "content-type": "application/json" }, ...(body.length < 20_000 ? { keepalive: true } : {}), body,
       });
       if (r.status === 409) {
         // The desktop app has a single writer per script (one window each), so a stale revision can only come from our own earlier request
